@@ -1,0 +1,9 @@
+[project]
+name = "zapi"
+version = "0.1.0"
+description = "API collections for study"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi[standard]>=0.116.1",
+]
