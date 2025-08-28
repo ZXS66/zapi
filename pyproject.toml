@@ -10,3 +10,9 @@ dependencies = [
     "python-dotenv>=1.1.1",
     "requests>=2.32.4",
 ]
+
+[[tool.uv.index]]
+url = "https://mirrors.aliyun.com/pypi/simple/"
+default = true
+[[tool.uv.pip]]
+index-url = "https://mirrors.aliyun.com/pypi/simple/"

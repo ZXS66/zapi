@@ -8,6 +8,12 @@ COPY . /app
 
 # Install the application dependencies.
 WORKDIR /app
+
+# 使用阿里云镜像源
+ENV UV_DEFAULT_INDEX=https://mirrors.aliyun.com/pypi/simple/
+# 或清华大学镜像源
+# ENV UV_DEFAULT_INDEX=https://pypi.tuna.tsinghua.edu.cn/simple/
+
 # RUN uv sync --locked --no-cache
 RUN uv sync
 
