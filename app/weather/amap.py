@@ -1,13 +1,14 @@
 from dataclasses import dataclass
 # from dataclasses_json import dataclass_json
-from typing_extensions import Optional
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from typing import List, Literal
-import requests
-import json
+from typing import List, Literal, Optional
+from requests import get as fetch
+from json import load as jsonLoad, dumps as jsonDumps
 from re import fullmatch
+from asyncio import sleep as asleep
+from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
+from pydantic import BaseModel
 
+from app.wscm import WebSocketConnectionManager
 from app.constants import AMAP_APP_KEY
 
 router = APIRouter()
@@ -30,10 +31,10 @@ class AmapCity:
     adcode:str
     citycode:Optional[str]
 
-__cities:List[AmapCity] = [];
+__cities:List[AmapCity] = []
 with open("app/weather/cities.json",'r') as file:
     # __cities = AmapCity.from_dict(__cities)
-    __temp = json.load(file)
+    __temp = jsonLoad(file)
     for item in __temp:
         __cities.append(AmapCity(**item))
 
@@ -79,7 +80,7 @@ async def forecast(form: ForecastForm):
     # https://lbs.amap.com/api/webservice/guide/api/weatherinfo
     theCity = __getAmapCityByName(form.city)
     AMAP_API_ENDPOINT = 'https://restapi.amap.com/v3/weather/weatherInfo'
-    resp = requests.get(
+    resp = fetch(
         AMAP_API_ENDPOINT,
         params={
             "key":AMAP_APP_KEY,
@@ -89,3 +90,28 @@ async def forecast(form: ForecastForm):
         }
     )
     return resp.json()
+
+wscm = WebSocketConnectionManager()
+
+@router.websocket("/forecast_ws/{client_id}")
+async def forecast_ws(websocket: WebSocket, client_id: str):
+    await wscm.connect(websocket)
+    print(f'client {client_id} connected')
+    # RETRY_IN_SECONDS = 16384
+    RETRY_IN_SECONDS = 8
+    try:
+        while True:
+            # text = await websocket.receive_text()
+            # await wscm.send_personal_message(f"You wrote: {data}", websocket)
+            # await wscm.broadcast(f"Client #{client_id} says: {data}")
+            data:dict = await websocket.receive_json()
+            resp = await forecast(ForecastForm(**data))
+            print(f'got response: {resp}')
+            await wscm.send_personal_message(jsonDumps(resp), websocket)
+            await asleep(RETRY_IN_SECONDS)
+    except WebSocketDisconnect:
+        wscm.disconnect(websocket)
+        print(f'client {client_id} disconnected')
+        # await wscm.broadcast(f"Client #{client_id} left the chat")
+    except Exception as e:
+        print(f"error occurred: {e}")
