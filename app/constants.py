@@ -14,3 +14,8 @@ WECHAT_APPID: Final[str] = os.getenv("WECHAT_APPID") or ""
 WECHAT_APPSECRET: Final[str] = os.getenv("WECHAT_APPSECRET") or ""
 WECHAT_TEMPLATEID: Final[str] = os.getenv("WECHAT_TEMPLATEID") or ""
 WECHAT_TOUSERS: Final[List[str]] = (os.getenv("WECHAT_TOUSERS") or "").split(",")
+
+RUN_MODE = os.getenv("RUN_MODE") or "UNKNOWN"
+
+IS_PROD_MODE = RUN_MODE == "prod"
+"""detect current application is running in production mode"""

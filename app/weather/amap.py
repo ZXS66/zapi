@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 
 from app.wscm import WebSocketConnectionManager
-from app.constants import AMAP_APP_KEY
+from app.constants import AMAP_APP_KEY, IS_PROD_MODE
 
 router = APIRouter()
 
@@ -97,18 +97,13 @@ wscm = WebSocketConnectionManager()
 async def forecast_ws(websocket: WebSocket, client_id: str):
     await wscm.connect(websocket)
     print(f'client {client_id} connected')
-    # RETRY_IN_SECONDS = 16384
-    RETRY_IN_SECONDS = 8
     try:
+        data = await websocket.receive_json()
         while True:
-            # text = await websocket.receive_text()
-            # await wscm.send_personal_message(f"You wrote: {data}", websocket)
-            # await wscm.broadcast(f"Client #{client_id} says: {data}")
-            data:dict = await websocket.receive_json()
             resp = await forecast(ForecastForm(**data))
             print(f'got response: {resp}')
             await wscm.send_personal_message(jsonDumps(resp), websocket)
-            await asleep(RETRY_IN_SECONDS)
+            await asleep(16384 if IS_PROD_MODE else 16)
     except WebSocketDisconnect:
         wscm.disconnect(websocket)
         print(f'client {client_id} disconnected')
