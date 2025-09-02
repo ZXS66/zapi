@@ -9,8 +9,7 @@ app = FastAPI()
 
 app.include_router(
     amap.router,
-    prefix=ZAPI_BASE_URL+"weather",
-    dependencies=[Depends(get_token_header)],
+    prefix=ZAPI_BASE_URL+"weather"
 )
 app.include_router(
     sendAlert.router,

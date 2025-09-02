@@ -5,11 +5,12 @@ from requests import get as fetch
 from json import load as jsonLoad, dumps as jsonDumps
 from re import fullmatch
 from asyncio import sleep as asleep
-from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 
+from app.dependencies import get_token_header
 from app.wscm import WebSocketConnectionManager
-from app.constants import AMAP_APP_KEY, IS_PROD_MODE
+from app.constants import AMAP_APP_KEY, IS_PROD_MODE, ZAPI_TOKEN
 
 router = APIRouter()
 
@@ -39,7 +40,7 @@ with open("app/weather/cities.json",'r') as file:
         __cities.append(AmapCity(**item))
 
 
-@router.get("/cities")
+@router.get("/cities", dependencies=[Depends(get_token_header)])
 async def cities():
     return __cities
 
@@ -71,7 +72,7 @@ def __getAmapCityByName(name:str) -> AmapCity:
     raise HTTPException(status_code=404, detail=f"the city ({name}) is not found")
 
 
-@router.post("/forecast")
+@router.post("/forecast", dependencies=[Depends(get_token_header)])
 async def forecast(form: ForecastForm):
     # city:str, extensions: Optional[Literal["base", "all"]]
     if len(form.city) == 0:
@@ -93,11 +94,19 @@ async def forecast(form: ForecastForm):
 
 wscm = WebSocketConnectionManager()
 
-@router.websocket("/forecast_ws/{client_id}")
+@router.websocket("/forecast_ws/{client_id}", dependencies=None)
 async def forecast_ws(websocket: WebSocket, client_id: str):
-    await wscm.connect(websocket)
-    print(f'client {client_id} connected')
     try:
+        await wscm.connect(websocket)
+        # step 1 (after connected): exchange tokens
+        await wscm.send_personal_message("天王盖地虎", websocket)
+        x_token = await websocket.receive_text()
+        if x_token != ZAPI_TOKEN:
+            await wscm.send_personal_message("宝塔镇河妖", websocket)
+            wscm.disconnect(websocket) # not working as expected?
+            raise HTTPException(status_code=403, detail="invalid token")
+            return
+        # step 2 (after exchanged tokens): send forecast request form
         data = await websocket.receive_json()
         while True:
             resp = await forecast(ForecastForm(**data))
@@ -106,7 +115,5 @@ async def forecast_ws(websocket: WebSocket, client_id: str):
             await asleep(16384 if IS_PROD_MODE else 16)
     except WebSocketDisconnect:
         wscm.disconnect(websocket)
-        print(f'client {client_id} disconnected')
-        # await wscm.broadcast(f"Client #{client_id} left the chat")
     except Exception as e:
         print(f"error occurred: {e}")
