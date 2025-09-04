@@ -5,10 +5,18 @@ from requests import get as fetch
 from json import load as jsonLoad, dumps as jsonDumps
 from re import fullmatch
 from asyncio import sleep as asleep
-from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    WebSocket,
+    WebSocketDisconnect,
+    WebSocketException,
+    status
+)
 from pydantic import BaseModel
 
-from app.dependencies import get_token_header
+from app.dependencies import get_token_header, get_token_query
 from app.wscm import WebSocketConnectionManager
 from app.constants import AMAP_APP_KEY, IS_PROD_MODE, ZAPI_TOKEN
 
@@ -94,26 +102,18 @@ async def forecast(form: ForecastForm):
 
 wscm = WebSocketConnectionManager()
 
-@router.websocket("/forecast_ws/{client_id}", dependencies=None)
-async def forecast_ws(websocket: WebSocket, client_id: str):
+@router.websocket("/forecast_ws/{client_id}", dependencies=[Depends(get_token_query)])
+async def forecast_ws(websocket: WebSocket, client_id: Optional[str]=None):
+    print(f"{client_id} is connected")
     try:
         await wscm.connect(websocket)
-        # step 1 (after connected): exchange tokens
-        await wscm.send_personal_message("天王盖地虎", websocket)
-        x_token = await websocket.receive_text()
-        if x_token != ZAPI_TOKEN:
-            await wscm.send_personal_message("宝塔镇河妖", websocket)
-            wscm.disconnect(websocket) # not working as expected?
-            raise HTTPException(status_code=403, detail="invalid token")
-            return
-        # step 2 (after exchanged tokens): send forecast request form
         data = await websocket.receive_json()
         while True:
             resp = await forecast(ForecastForm(**data))
-            print(f'got response: {resp}')
             await wscm.send_personal_message(jsonDumps(resp), websocket)
             await asleep(16384 if IS_PROD_MODE else 16)
     except WebSocketDisconnect:
+        print(f"{client_id} is disconnected")
         wscm.disconnect(websocket)
     except Exception as e:
-        print(f"error occurred: {e}")
+        print(f"error occurred for {client_id}: {e}")
