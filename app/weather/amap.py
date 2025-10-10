@@ -1,49 +1,46 @@
 from dataclasses import dataclass
+
 # from dataclasses_json import dataclass_json
-from typing import List, Literal, Optional
+from typing import Any, Literal
 from requests import get as fetch
 from json import load as jsonLoad, dumps as jsonDumps
 from re import fullmatch
 from asyncio import sleep as asleep
-from fastapi import (
-    APIRouter,
-    Depends,
-    HTTPException,
-    WebSocket,
-    WebSocketDisconnect,
-    WebSocketException,
-    status
-)
+from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 
 from app.dependencies import get_token_header, get_token_query
 from app.wscm import WebSocketConnectionManager
-from app.constants import AMAP_APP_KEY, IS_PROD_MODE, ZAPI_TOKEN
+from app.constants import AMAP_APP_KEY, IS_PROD_MODE
 
 router = APIRouter()
 
+
 class ForecastForm(BaseModel):
     """请求参数"""
+
     city: str
     """城市编码adcode"""
-    extensions: Optional[Literal["base","all"]] = None
+    extensions: Literal["base", "all"] | None = None
     """气象类型,base:返回实况天气,all:返回预报天气"""
     # key: Optional[str] = AMAP_API_KEY
     # """请求服务权限标识"""
     # output: Literal["JSON","XML"] = "JSON"
     # """返回格式"""
 
+
 # @dataclass_json
 @dataclass(frozen=True)
 class AmapCity:
-    city:str
-    adcode:str
-    citycode:Optional[str]
+    city: str
+    adcode: str
+    citycode: str | None = None
 
-__cities:List[AmapCity] = []
-with open("app/weather/cities.json",'r') as file:
+
+__cities: list[AmapCity] = []
+with open("app/weather/cities.json", "r") as file:
     # __cities = AmapCity.from_dict(__cities)
-    __temp = jsonLoad(file)
+    __temp: list[dict[str, Any]] = jsonLoad(file)
     for item in __temp:
         __cities.append(AmapCity(**item))
 
@@ -53,14 +50,14 @@ async def cities():
     return __cities
 
 
-def __getAmapCityByName(name:str) -> AmapCity:
-    if fullmatch(r'\d+', name):
+def __getAmapCityByName(name: str) -> AmapCity:
+    if fullmatch(r"\d+", name):
         # `name` is adcode, no conversion needed
-        return AmapCity(name,name,name)
+        return AmapCity(name, name, name)
 
-    if fullmatch(r'.+市.+[区县]?', name):
+    if fullmatch(r".+市.+[区县]?", name):
         # search by **市**区/县'
-        city, district = name[:name.index('市')+1], name[name.index('市')+1:]
+        city, district = name[: name.index("市") + 1], name[name.index("市") + 1 :]
         flag = 0
         for ct in __cities:
             if not flag:
@@ -81,29 +78,31 @@ def __getAmapCityByName(name:str) -> AmapCity:
 
 
 @router.post("/forecast", dependencies=[Depends(get_token_header)])
-async def forecast(form: ForecastForm):
+async def forecast(form: ForecastForm) -> Any:
     # city:str, extensions: Optional[Literal["base", "all"]]
     if len(form.city) == 0:
         raise HTTPException(status_code=400, detail="invalid form data")
 
     # https://lbs.amap.com/api/webservice/guide/api/weatherinfo
     theCity = __getAmapCityByName(form.city)
-    AMAP_API_ENDPOINT = 'https://restapi.amap.com/v3/weather/weatherInfo'
+    AMAP_API_ENDPOINT = "https://restapi.amap.com/v3/weather/weatherInfo"
     resp = fetch(
         AMAP_API_ENDPOINT,
         params={
-            "key":AMAP_APP_KEY,
+            "key": AMAP_APP_KEY,
             "city": theCity.adcode,
             "extensions": form.extensions,
-            "output": "JSON"
-        }
+            "output": "JSON",
+        },
     )
     return resp.json()
 
+
 wscm = WebSocketConnectionManager()
 
+
 @router.websocket("/forecast_ws/{client_id}", dependencies=[Depends(get_token_query)])
-async def forecast_ws(websocket: WebSocket, client_id: Optional[str]=None):
+async def forecast_ws(websocket: WebSocket, client_id: str | None = None):
     print(f"{client_id} is connected")
     try:
         await wscm.connect(websocket)

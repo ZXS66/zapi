@@ -3,8 +3,7 @@ from markdown_it import MarkdownIt
 from pydantic import BaseModel
 from requests import get as fetch
 
-from app.constants import AMAP_APP_KEY, IS_PROD_MODE
-from app.dependencies import get_token_header, get_token_query
+from app.dependencies import get_token_header
 from app.utils import isNoneOrEmptyStr
 
 router = APIRouter()
@@ -15,9 +14,9 @@ class SyntaxHighlightingForm(BaseModel):
 
     lang: str
     """programming language"""
-    url: str | None
+    url: str | None = None
     """URL of hosted source code（e.g.: github.com）"""
-    source: str | None
+    source: str | None = None
     """source code (alternative)"""
 
 

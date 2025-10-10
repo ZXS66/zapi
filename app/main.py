@@ -2,7 +2,7 @@ from fastapi import Depends, FastAPI
 
 from .constants import ZAPI_BASE_URL
 from .dependencies import get_token_header
-from .code import syntaxhighlighting
+from .markdown import syntaxhighlighting
 from .weather import amap
 from .wechat import sendAlert
 
@@ -10,18 +10,16 @@ app = FastAPI()
 
 app.include_router(
     syntaxhighlighting.router,
-    prefix=ZAPI_BASE_URL+"code",
+    prefix=ZAPI_BASE_URL + "markdown",
     dependencies=[Depends(get_token_header)],
 )
-app.include_router(
-    amap.router,
-    prefix=ZAPI_BASE_URL+"weather"
-)
+app.include_router(amap.router, prefix=ZAPI_BASE_URL + "weather")
 app.include_router(
     sendAlert.router,
-    prefix=ZAPI_BASE_URL+"wechat",
+    prefix=ZAPI_BASE_URL + "wechat",
     dependencies=[Depends(get_token_header)],
 )
+
 
 @app.get(ZAPI_BASE_URL)
 async def index():
