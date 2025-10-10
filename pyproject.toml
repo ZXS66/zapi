@@ -7,6 +7,7 @@ requires-python = ">=3.13"
 dependencies = [
     # "dataclasses-json>=0.6.7",
     "fastapi[standard]>=0.116.1",
+    "markdown-it-py>=3.0.0",
     "python-dotenv>=1.1.1",
     "requests>=2.32.4",
 ]
