@@ -20,7 +20,9 @@ class SyntaxHighlightingForm(BaseModel):
     """source code (alternative)"""
 
 
-@router.post("/syntaxhighlighting", dependencies=[Depends(get_token_header)])
+@router.post(
+    "/syntaxhighlighting", dependencies=[Depends(get_token_header)], deprecated=True
+)
 async def syntaxhighlighting(form: SyntaxHighlightingForm):
     if len(form.lang) == 0 or (
         isNoneOrEmptyStr(form.url) and isNoneOrEmptyStr(form.source)
