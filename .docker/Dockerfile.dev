@@ -1,0 +1,29 @@
+FROM python:3.13-slim-bullseye
+
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
+
+# Set working directory
+WORKDIR /app
+
+# Copy application source code
+COPY . .
+
+# Use Alibaba Cloud mirror for faster downloads in China
+ENV UV_DEFAULT_INDEX=https://mirrors.aliyun.com/pypi/simple/
+
+# Install dependencies
+RUN uv sync --frozen --no-dev
+
+# Create non-root user for security
+RUN useradd --create-home --shell /bin/bash app && \
+    chown -R app:app /app
+
+USER app
+
+# Expose port
+EXPOSE 8000
+
+# Default command (can be overridden in docker-compose)
+# CMD /app/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+CMD uv run fastapi dev

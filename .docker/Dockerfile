@@ -18,4 +18,4 @@ ENV UV_DEFAULT_INDEX=https://mirrors.aliyun.com/pypi/simple/
 RUN uv sync
 
 # Run the application.
-CMD ["/app/.venv/bin/fastapi", "run", "app/main.py", "--port", "80"]
+CMD ["uv", "run", "fastapi", "app/main.py", "--host", "0.0.0.0", "--port", "80"]
