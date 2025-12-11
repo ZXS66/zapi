@@ -1,33 +1,20 @@
 {
-	"version": "2.0.0",
-	"tasks": [
-		{
-			"type": "docker-build",
-			"label": "docker-build",
-			"platform": "python",
-			"dockerBuild": {
-				"tag": "zapi:latest",
-				"dockerfile": "${workspaceFolder}/Dockerfile",
-				"context": "${workspaceFolder}",
-				"pull": true
-			}
-		},
-		{
-			"type": "docker-run",
-			"label": "docker-run: debug",
-			"dependsOn": [
-				"docker-build"
-			],
-			"python": {
-				"args": [
-					"app.main:app",
-					"--host",
-					"0.0.0.0",
-					"--port",
-					"8000"
-				],
-				"module": "uvicorn"
-			}
-		}
-	]
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "podman-build",
+      "type": "shell",
+      "command": "podman build --pull --file .docker/Dockerfile --tag zapi:latest .",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "podman-run: debug",
+      "type": "shell",
+      "dependsOn": ["podman-build"],
+      "command": "podman run --rm -p 8000:8000 zapi:latest uvicorn app.main:app --host 0.0.0.0 --port 8000",
+      "group": "test",
+      "problemMatcher": []
+    }
+  ]
 }

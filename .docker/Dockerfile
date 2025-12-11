@@ -1,7 +1,7 @@
 FROM python:3.13-slim-bullseye
 
 # Install uv.
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 # Copy the application into the container.
 COPY . /app
@@ -15,7 +15,7 @@ ENV UV_DEFAULT_INDEX=https://mirrors.aliyun.com/pypi/simple/
 # ENV UV_DEFAULT_INDEX=https://pypi.tuna.tsinghua.edu.cn/simple/
 
 # RUN uv sync --locked --no-cache
-RUN uv sync
+RUN uv sync --frozen
 
 # Run the application.
-CMD ["uv", "run", "fastapi", "app/main.py", "--host", "0.0.0.0", "--port", "80"]
+CMD ["/app/.venv/bin/fastapi", "run", "app/main.py", "--port", "80", "--host", "0.0.0.0"]

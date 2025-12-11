@@ -57,8 +57,13 @@ main() {
     fi
 
     print_status "Building image with $CT_TOOL..."
-    $CT_TOOL build -t zapi .
-    print_success "Image built: zapi"
+    if [ "$mode" = "dev" ]; then
+        $CT_TOOL build -t zapi -f .docker/Dockerfile.dev .
+        print_success "image built for dev: zapi"
+    elif [ "$mode" = "prod" ]; then
+        $CT_TOOL build -t zapi -f .docker/Dockerfile .
+        print_success "image built for prod: zapi"
+    fi
 
     print_status "Stopping any running zapi container..."
     $CT_TOOL stop zapi_app 2>/dev/null || true
@@ -66,10 +71,10 @@ main() {
 
     if [ "$mode" = "dev" ]; then
         print_status "Starting zapi in development mode (hot reload)..."
-        $CT_TOOL run -it --name zapi_app -p 8000:8000 --env-file .env.dev zapi uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+        $CT_TOOL run -it --name zapi_app -p 8000:8000 --env-file .env.dev zapi
     else
         print_status "Starting zapi in production mode..."
-        $CT_TOOL run -it --name zapi_app -p 8000:8000 --env-file .env zapi uvicorn app.main:app --host 0.0.0.0 --port 8000
+        $CT_TOOL run -itd --name zapi_app -p 8081:80 --env-file .env zapi
     fi
 }
 
