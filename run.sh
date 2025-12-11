@@ -50,7 +50,7 @@ main() {
         print_success "Podman detected. Using Podman."
     elif command -v docker &> /dev/null; then
         CT_TOOL="docker"
-        print_warning "Podman not found. Using Docker."
+        print_status "Podman not found. Using Docker."
     else
         print_error "Neither Podman nor Docker is installed."
         exit 1
