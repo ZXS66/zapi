@@ -1,3 +1,6 @@
+from datetime import date
+from typing import Optional
+
 from pydantic import BaseModel
 from sqlalchemy import (
     VARCHAR,
@@ -40,3 +43,50 @@ class QueryRequestForm(BaseModel):
     """search term"""
     page_size: int = 20
     page_index: int = 0
+
+
+class FamilyMemberBase(BaseModel):
+    """Base schema for family member data"""
+
+    name: str
+    gender: int  # SmallInteger
+    father_id: int
+    mother_id: int
+    pin_yin: str
+    birthday: Optional[date] = None
+    deathday: Optional[date] = None
+    avatar_url: Optional[str] = None
+    summary: Optional[str] = None
+    extra: Optional[str] = None
+    protected_info: Optional[str] = None
+
+
+class FamilyMemberCreate(FamilyMemberBase):
+    """Schema for creating a new family member"""
+
+    pass
+
+
+class FamilyMemberUpdate(BaseModel):
+    """Schema for updating a family member (all fields optional)"""
+
+    name: Optional[str] = None
+    gender: Optional[int] = None
+    father_id: Optional[int] = None
+    mother_id: Optional[int] = None
+    pin_yin: Optional[str] = None
+    birthday: Optional[date] = None
+    deathday: Optional[date] = None
+    avatar_url: Optional[str] = None
+    summary: Optional[str] = None
+    extra: Optional[str] = None
+    protected_info: Optional[str] = None
+
+
+class FamilyMemberSchema(FamilyMemberBase):
+    """Schema for family member response (includes ID)"""
+
+    id: int
+
+    class Config:
+        orm_mode = True
