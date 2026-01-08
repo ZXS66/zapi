@@ -1,10 +1,11 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+
+import requests
 from fastapi import APIRouter
 from pydantic import BaseModel
-import requests
 
-from app.constants import (
+from ..constants import (
     WECHAT_APPID,
     WECHAT_APPSECRET,
     WECHAT_TEMPLATEID,

@@ -3,8 +3,8 @@ from markdown_it import MarkdownIt
 from pydantic import BaseModel
 from requests import get as fetch
 
-from app.dependencies import get_token_header
-from app.utils import isNoneOrEmptyStr
+from ..dependencies import get_token_header
+from ..utils import isNoneOrEmptyStr
 
 router = APIRouter()
 

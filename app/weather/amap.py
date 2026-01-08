@@ -1,17 +1,19 @@
+from asyncio import sleep as asleep
 from dataclasses import dataclass
+from json import dumps as jsonDumps
+from json import load as jsonLoad
+from re import fullmatch
 
 # from dataclasses_json import dataclass_json
 from typing import Any, Literal
-from requests import get as fetch
-from json import load as jsonLoad, dumps as jsonDumps
-from re import fullmatch
-from asyncio import sleep as asleep
+
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
+from requests import get as fetch
 
-from app.dependencies import get_token_header, get_token_query
-from app.wscm import WebSocketConnectionManager
-from app.constants import AMAP_APP_KEY, IS_PROD_MODE
+from ..constants import AMAP_APP_KEY, IS_PROD_MODE
+from ..dependencies import get_token_header, get_token_query
+from ..wscm import WebSocketConnectionManager
 
 router = APIRouter()
 
