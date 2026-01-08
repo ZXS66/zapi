@@ -53,10 +53,10 @@ def get_knowledge_points_for_preview(db: Session, user_id: int, limit: int = 5):
             & (models.UserProgress.user_id == user_id),
         )
         .filter(
-            (models.UserProgress.last_reviewed == None)
+            (models.UserProgress.last_reviewed.is_(None))
             | (models.UserProgress.last_reviewed < today)
         )
-        .filter(models.KnowledgePoint.is_active == True)
+        .filter(models.KnowledgePoint.is_active.is_(True))
         .limit(limit)
         .all()
     )
@@ -74,7 +74,7 @@ def get_knowledge_points_for_review(db: Session, user_id: int, limit: int = 5):
         )
         .filter(
             models.UserProgress.last_reviewed < today,
-            models.KnowledgePoint.is_active == True,
+            models.KnowledgePoint.is_active.is_(True),
         )
         .order_by(models.UserProgress.confidence_level.asc())
         .limit(limit)
@@ -86,7 +86,7 @@ def search_knowledge_points(
     db: Session, query: Optional[str] = None, tags: Optional[List[str]] = None
 ):
     search_query = db.query(models.KnowledgePoint).filter(
-        models.KnowledgePoint.is_active == True
+        models.KnowledgePoint.is_active.is_(True)
     )
 
     if query:
@@ -118,22 +118,24 @@ def record_user_progress(
 
     if progress:
         # Update existing progress
-        progress.last_reviewed = datetime.now()
-        progress.review_count += 1
-        progress.confidence_level = confidence_level
+        progress.last_reviewed = datetime.now()  # type: ignore
+        progress.review_count += 1  # type: ignore
+        progress.confidence_level = confidence_level  # type: ignore
 
         # Calculate next review based on confidence (spaced repetition)
         if confidence_level >= 4:
-            progress.is_learned = True
-            progress.next_review = datetime.now() + timedelta(
+            progress.is_learned = True  # type: ignore
+            progress.next_review = datetime.now() + timedelta(  # type: ignore
                 days=7
             )  # Review in 1 week
         elif confidence_level >= 2:
-            progress.next_review = datetime.now() + timedelta(
+            progress.next_review = datetime.now() + timedelta(  # type: ignore
                 days=3
             )  # Review in 3 days
         else:
-            progress.next_review = datetime.now() + timedelta(days=1)  # Review tomorrow
+            progress.next_review = datetime.now() + timedelta(  # type: ignore
+                days=1
+            )  # Review tomorrow
     else:
         # Create new progress record
         progress = models.UserProgress(
@@ -146,12 +148,12 @@ def record_user_progress(
 
         # Set next review based on confidence
         if confidence_level >= 4:
-            progress.is_learned = True
-            progress.next_review = datetime.now() + timedelta(days=7)
+            progress.is_learned = True  # type: ignore
+            progress.next_review = datetime.now() + timedelta(days=7)  # type: ignore
         elif confidence_level >= 2:
-            progress.next_review = datetime.now() + timedelta(days=3)
+            progress.next_review = datetime.now() + timedelta(days=3)  # type: ignore
         else:
-            progress.next_review = datetime.now() + timedelta(days=1)
+            progress.next_review = datetime.now() + timedelta(days=1)  # type: ignore
 
         db.add(progress)
 
@@ -165,7 +167,7 @@ def get_user_knowledge_points(db: Session, username: str):
         db.query(models.KnowledgePoint)
         .filter(
             models.KnowledgePoint.created_by == username,
-            models.KnowledgePoint.is_active == True,
+            models.KnowledgePoint.is_active.is_(True),
         )
         .all()
     )

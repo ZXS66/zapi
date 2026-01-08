@@ -50,29 +50,6 @@
 |--------|----------|-------------|
 | POST | `/api/preview-review/progress/` | Record review progress |
 
-## Project Structure
-
-```
-zapi/
-├── app/
-│   ├── main.py                 # Main FastAPI application
-│   ├── constants.py            # Environment variables and constants
-│   ├── dependencies.py         # Authentication dependencies
-│   ├── preview_n_review/       # Knowledge review system module
-│   │   ├── main.py            # Preview-review API routes
-│   │   ├── models.py          # Database models
-│   │   ├── schemas.py         # Pydantic schemas
-│   │   ├── crud.py            # Database operations
-│   │   ├── database.py        # Database configuration
-│   │   ├── auth.py            # Authentication middleware
-│   │   └── scripts/           # Utility scripts
-│   ├── markdown/              # Markdown syntax highlighting
-│   ├── weather/               # Weather API
-│   └── wechat/                # WeChat notifications
-├── pyproject.toml             # Project dependencies (uv)
-└── .env                         # Environment variables
-```
-
 ## Usage Examples (Preview & Review System)
 
 ### 1. Register a User (Preview & Review System)

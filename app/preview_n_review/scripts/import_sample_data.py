@@ -1,4 +1,4 @@
-import json
+# import json
 import sys
 
 import requests
@@ -86,10 +86,7 @@ def import_sample_data(base_url: str):
     user_token = "_n1LdwPkoqtOSAijbkN4tG4Ee8ixXcG3r_V40nBX4-g"
 
     # Use both global token and user bearer token
-    headers = {
-        "x-token": API_TOKEN,
-        "Authorization": f"Bearer {user_token}"
-    }
+    headers = {"x-token": API_TOKEN, "Authorization": f"Bearer {user_token}"}
     imported_count = 0
 
     print(

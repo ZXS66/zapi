@@ -1,11 +1,10 @@
-from datetime import datetime
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-from . import auth, crud, database, models, schemas
-from .database import engine
+from ..pg import engine, get_db
+from . import auth, crud, models, schemas
 
 # Create tables
 models.Base.metadata.create_all(bind=engine)
@@ -15,7 +14,7 @@ router = APIRouter()
 
 # API 1: User Registration
 @router.post("/users/", response_model=schemas.User)
-def create_user(user: schemas.UserCreate, db: Session = Depends(database.get_db)):
+def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db_user = crud.get_user_by_username(db, username=user.username)
     if db_user:
         raise HTTPException(status_code=400, detail="Username already registered")
@@ -26,10 +25,10 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(database.get_db)
 @router.get("/preview/", response_model=schemas.ReviewSession)
 def get_preview_session(
     current_user: models.User = Depends(auth.get_current_user),
-    db: Session = Depends(database.get_db),
+    db: Session = Depends(get_db),
     limit: int = Query(5, description="Number of knowledge points to preview"),
 ):
-    knowledge_points = crud.get_knowledge_points_for_preview(db, current_user.id, limit)
+    knowledge_points = crud.get_knowledge_points_for_preview(db, current_user.id, limit)  # type: ignore
     return {"knowledge_points": knowledge_points, "session_type": "preview"}
 
 
@@ -37,11 +36,11 @@ def get_preview_session(
 @router.get("/review/", response_model=schemas.ReviewSession)
 def get_review_session(
     current_user: models.User = Depends(auth.get_current_user),
-    db: Session = Depends(database.get_db),
+    db: Session = Depends(get_db),
     limit: int = Query(5, description="Number of knowledge points to review"),
 ):
     # For review, get items that were previously seen and need reinforcement
-    knowledge_points = crud.get_knowledge_points_for_review(db, current_user.id, limit)
+    knowledge_points = crud.get_knowledge_points_for_review(db, current_user.id, limit)  # type: ignore
     return {"knowledge_points": knowledge_points, "session_type": "review"}
 
 
@@ -51,7 +50,7 @@ def search_knowledge_points(
     query: Optional[str] = Query(None, description="Search in stem, answer, and topic"),
     tags: Optional[List[str]] = Query(None, description="Filter by tags"),
     current_user: models.User = Depends(auth.get_current_user),
-    db: Session = Depends(database.get_db),
+    db: Session = Depends(get_db),
 ):
     return crud.search_knowledge_points(db, query, tags)
 
@@ -61,9 +60,9 @@ def search_knowledge_points(
 def create_knowledge_point(
     knowledge_point: schemas.KnowledgePointCreate,
     current_user: models.User = Depends(auth.get_current_user),
-    db: Session = Depends(database.get_db),
+    db: Session = Depends(get_db),
 ):
-    return crud.create_knowledge_point(db, knowledge_point, current_user.username)
+    return crud.create_knowledge_point(db, knowledge_point, current_user.username)  # type: ignore
 
 
 # API 6: Import Knowledge Points (Batch)
@@ -71,11 +70,11 @@ def create_knowledge_point(
 def import_knowledge_points(
     knowledge_points: List[schemas.KnowledgePointCreate],
     current_user: models.User = Depends(auth.get_current_user),
-    db: Session = Depends(database.get_db),
+    db: Session = Depends(get_db),
 ):
     imported = []
     for kp in knowledge_points:
-        db_kp = crud.create_knowledge_point(db, kp, current_user.username)
+        db_kp = crud.create_knowledge_point(db, kp, current_user.username)  # type: ignore
         imported.append(db_kp)
     return {"imported_count": len(imported), "knowledge_points": imported}
 
@@ -84,9 +83,9 @@ def import_knowledge_points(
 @router.get("/knowledge-points/export/")
 def export_knowledge_points(
     current_user: models.User = Depends(auth.get_current_user),
-    db: Session = Depends(database.get_db),
+    db: Session = Depends(get_db),
 ):
-    knowledge_points = crud.get_user_knowledge_points(db, current_user.username)
+    knowledge_points = crud.get_user_knowledge_points(db, current_user.username)  # type: ignore
 
     export_data = [
         {
@@ -108,10 +107,13 @@ def record_progress(
     knowledge_point_id: int,
     confidence_level: int = Query(..., ge=0, le=5, description="Confidence level 0-5"),
     current_user: models.User = Depends(auth.get_current_user),
-    db: Session = Depends(database.get_db),
+    db: Session = Depends(get_db),
 ):
     return crud.record_user_progress(
-        db, current_user.id, knowledge_point_id, confidence_level
+        db,
+        current_user.id,  # type: ignore
+        knowledge_point_id,
+        confidence_level,
     )
 
 
@@ -119,9 +121,9 @@ def record_progress(
 @router.get("/knowledge-points/", response_model=List[schemas.KnowledgePoint])
 def get_user_knowledge_points(
     current_user: models.User = Depends(auth.get_current_user),
-    db: Session = Depends(database.get_db),
+    db: Session = Depends(get_db),
 ):
-    return crud.get_user_knowledge_points(db, current_user.username)
+    return crud.get_user_knowledge_points(db, current_user.username)  # type: ignore
 
 
 # Root endpoint for preview-review module
