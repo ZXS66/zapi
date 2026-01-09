@@ -3,6 +3,7 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
+from typing_extensions import Optional
 
 from ..pg import get_db
 from .models import (
@@ -10,22 +11,32 @@ from .models import (
     FamilyMemberCreate,
     FamilyMemberSchema,
     FamilyMemberUpdate,
-    QueryRequestForm,
 )
 
 router = APIRouter()
 
 
 @router.get("/members/", response_model=List[FamilyMemberSchema])
-def query_list(rq: QueryRequestForm, db: Session = Depends(get_db)):
+def query_list(
+    q: Optional[str] = None,
+    page_size: Optional[int] = None,
+    page_index: Optional[int] = None,
+    db: Session = Depends(get_db),
+):
     """Query family members with pagination and search term"""
-    print(f"[form data] q:{rq.q}, page_size:{rq.page_size}, page_index:{rq.page_index}")
+    print(f"[form data] q:{q}, page_size:{page_size}, page_index:{page_index}")
+    if not q:
+        q = ""
+    if not page_size:
+        page_size = 10
+    if not page_index:
+        page_index = 0
     try:
         return (
             db.query(FamilyMember)
-            .filter(FamilyMember.name.contains(rq.q))
-            .offset(rq.page_size * rq.page_index)
-            .limit(rq.page_size)
+            .filter(FamilyMember.name.contains(q))
+            .offset(page_size * page_index)
+            .limit(page_size)
             .all()
         )
     except Exception as e:

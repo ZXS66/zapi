@@ -36,15 +36,6 @@ class FamilyMember(Base):
     protected_info = Column(Text)
 
 
-class QueryRequestForm(BaseModel):
-    """common request form for querying"""
-
-    q: str = ""
-    """search term"""
-    page_size: int = 20
-    page_index: int = 0
-
-
 class FamilyMemberBase(BaseModel):
     """Base schema for family member data"""
 
