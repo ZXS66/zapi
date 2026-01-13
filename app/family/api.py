@@ -35,6 +35,7 @@ def query_list(
         return (
             db.query(FamilyMember)
             .filter(FamilyMember.name.contains(q))
+            .order_by(FamilyMember.id.asc())
             .offset(page_size * page_index)
             .limit(page_size)
             .all()
@@ -101,7 +102,7 @@ def get_member(member_id: int, db: Session = Depends(get_db)) -> FamilyMemberSch
     return db_member
 
 
-@router.put("/members/{member_id}", response_model=FamilyMemberSchema)
+@router.post("/members/{member_id}", response_model=FamilyMemberSchema)
 def update_member(
     member_id: int, member_update: FamilyMemberUpdate, db: Session = Depends(get_db)
 ) -> FamilyMemberSchema:

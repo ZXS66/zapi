@@ -24,10 +24,10 @@ class FamilyMember(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(VARCHAR(32), nullable=False)
-    gender = Column(SmallInteger, nullable=False)
-    father_id = Column(Integer, nullable=False)
-    mother_id = Column(Integer, nullable=False)
-    pin_yin = Column(Text, nullable=False)
+    gender = Column(SmallInteger)
+    father_id = Column(Integer)
+    mother_id = Column(Integer)
+    pin_yin = Column(Text)
     birthday = Column(Date)
     deathday = Column(Date)
     avatar_url = Column(Text)
@@ -40,10 +40,10 @@ class FamilyMemberBase(BaseModel):
     """Base schema for family member data"""
 
     name: str
-    gender: int  # SmallInteger
-    father_id: int
-    mother_id: int
-    pin_yin: str
+    gender: Optional[int] = 0
+    father_id: Optional[int] = -1
+    mother_id: Optional[int] = -1
+    pin_yin: Optional[str] = None
     birthday: Optional[date] = None
     deathday: Optional[date] = None
     avatar_url: Optional[str] = None
