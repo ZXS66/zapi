@@ -38,9 +38,10 @@ Edit your environment files:
 
 ### 3. Run the Application
 
-**Run with Uvicorn (Recommended)**
+**Run with uv or Uvicorn (Recommended)**
 ```bash
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+uv run fastapi run app/main.py --port 8000 --reload
+# uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 The API will be available at `http://localhost:8000`

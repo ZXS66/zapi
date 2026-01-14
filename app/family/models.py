@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel
 from sqlalchemy import (
@@ -81,3 +81,9 @@ class FamilyMemberSchema(FamilyMemberBase):
 
     class Config:
         orm_mode = True
+
+
+class NameValueTagSchema(BaseModel):
+    name: str
+    value: Any
+    tag: Any

@@ -1,6 +1,7 @@
 from fastapi import Depends, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
-from .constants import ZAPI_BASE_URL
+from .constants import IS_PROD_MODE, ZAPI_BASE_URL
 from .dddd import echo
 from .dependencies import get_token_header
 from .family import api as family_api
@@ -33,6 +34,22 @@ app.include_router(
     prefix=ZAPI_BASE_URL + "wechat",
     dependencies=[Depends(get_token_header)],
 )
+
+if not IS_PROD_MODE:
+    origins = [
+        "https://localhost:4200/",
+        "https://localhost.localdomain:4200/",
+        "https://lvh.me:4200/",
+        "https://vite.lvh.me:4200/",
+    ]
+    app.add_middleware(
+        CORSMiddleware,
+        # allow_origins=origins,
+        allow_origins="*",
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 
 @app.get(ZAPI_BASE_URL)

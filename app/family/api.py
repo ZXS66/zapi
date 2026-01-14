@@ -11,6 +11,7 @@ from .models import (
     FamilyMemberCreate,
     FamilyMemberSchema,
     FamilyMemberUpdate,
+    NameValueTagSchema,
 )
 
 router = APIRouter()
@@ -127,3 +128,18 @@ def update_member(
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+
+@router.get("/namemeta/", response_model=List[NameValueTagSchema])
+def query_namemeta(
+    db: Session = Depends(get_db),
+):
+    """Query metadata of id-name pairs"""
+    try:
+        return db.query(
+            FamilyMember.id.label("value"),
+            FamilyMember.name,
+            FamilyMember.gender.label("tag"),
+        ).all()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
