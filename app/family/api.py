@@ -1,9 +1,8 @@
-from typing import List
-
 from fastapi import APIRouter, Depends, HTTPException
+from json import loads
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
-from typing_extensions import Optional
+from typing import Any, List, Optional, Tuple
 
 from ..pg import get_db
 from .models import (
@@ -11,6 +10,7 @@ from .models import (
     FamilyMemberCreate,
     FamilyMemberSchema,
     FamilyMemberUpdate,
+    NameValueChildrenSchema,
     NameValueTagSchema,
 )
 
@@ -143,3 +143,38 @@ def query_namemeta(
         ).all()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
+
+
+@router.get("/hierarchy/", response_model=Optional[NameValueChildrenSchema])
+def query_hierarchy(
+    db: Session = Depends(get_db),
+) -> Optional[NameValueChildrenSchema]:
+    """Query all members in hierarchy (nested) structure, discard isolated members (no connection to the root member)"""
+    """assumption: no cycle reference(s)"""
+    try:
+        data = db.query(
+            FamilyMember.id,
+            FamilyMember.name,
+            FamilyMember.father_id,
+            FamilyMember.title,
+        ).all()
+        if data is None or len(data) == 0:
+            return None
+        mapping = {d[0]: _parseNameValueChildrenSchema(d) for d in data}
+        for d in data:
+            if d.father_id in mapping:
+                child = mapping[d.id]
+                mapping[d.father_id].children.append(child)
+        return mapping[1]  # root node's id equals to 1, and should alwarys exist
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
+
+
+def _parseNameValueChildrenSchema(data: Any) -> NameValueChildrenSchema:
+    id, name, _, title = data
+    return NameValueChildrenSchema(
+        name=name,
+        value=id,
+        # tag=loads(extra) if extra and len(extra)>0 else None
+        tag=title,
+    )

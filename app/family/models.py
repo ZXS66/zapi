@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 from pydantic import BaseModel
 from sqlalchemy import (
@@ -25,8 +25,8 @@ class FamilyMember(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(VARCHAR(32), nullable=False)
     gender = Column(SmallInteger)
-    father_id = Column(Integer)
-    mother_id = Column(Integer)
+    father_id = Column(Integer, default=-1, comment="父亲id，-1表示未知")
+    mother_id = Column(Integer, default=-1, comment="母亲id，-1表示未知")
     pin_yin = Column(Text)
     birthday = Column(Date)
     deathday = Column(Date)
@@ -34,7 +34,8 @@ class FamilyMember(Base):
     summary = Column(Text)
     extra = Column(Text)
     protected_info = Column(Text)
-
+    sibling_order = Column(SmallInteger, default=-1, comment="兄弟姐妹排行，-1表示未知")
+    title = Column(VARCHAR(32), default="", comment="头衔/称谓")
 
 class FamilyMemberBase(BaseModel):
     """Base schema for family member data"""
@@ -86,4 +87,12 @@ class FamilyMemberSchema(FamilyMemberBase):
 class NameValueTagSchema(BaseModel):
     name: str
     value: Any
-    tag: Any
+    tag: Any = None
+    """optional attribute for remark"""
+
+
+class NameValueChildrenSchema(NameValueTagSchema):
+    children: List["NameValueChildrenSchema"] = []
+    """child nodes, empty by default"""
+    # def __init__(self):
+    #     self.children = []
