@@ -34,8 +34,8 @@ class FamilyMember(Base):
     summary = Column(Text)
     extra = Column(Text)
     protected_info = Column(Text)
-    sibling_order = Column(SmallInteger, default=-1, comment="兄弟姐妹排行，-1表示未知")
     title = Column(VARCHAR(32), default="", comment="头衔/称谓")
+
 
 class FamilyMemberBase(BaseModel):
     """Base schema for family member data"""
@@ -51,6 +51,7 @@ class FamilyMemberBase(BaseModel):
     summary: Optional[str] = None
     extra: Optional[str] = None
     protected_info: Optional[str] = None
+    title: Optional[str] = None
 
 
 class FamilyMemberCreate(FamilyMemberBase):
@@ -73,6 +74,7 @@ class FamilyMemberUpdate(BaseModel):
     summary: Optional[str] = None
     extra: Optional[str] = None
     protected_info: Optional[str] = None
+    title: Optional[str] = None
 
 
 class FamilyMemberSchema(FamilyMemberBase):
