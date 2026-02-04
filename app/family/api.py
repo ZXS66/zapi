@@ -157,7 +157,8 @@ def query_hierarchy(
             FamilyMember.name,
             FamilyMember.father_id,
             FamilyMember.title,
-        ).all()
+            FamilyMember.birthday
+        ).order_by(FamilyMember.birthday).all()
         if data is None or len(data) == 0:
             return None
         mapping = {d[0]: _parseNameValueChildrenSchema(d) for d in data}
@@ -171,7 +172,7 @@ def query_hierarchy(
 
 
 def _parseNameValueChildrenSchema(data: Any) -> NameValueChildrenSchema:
-    id, name, _, title = data
+    id, name, _, title, _ = data
     return NameValueChildrenSchema(
         name=name,
         value=id,
